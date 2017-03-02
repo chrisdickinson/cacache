@@ -21,7 +21,8 @@ test('index.find cache hit', function (t) {
     digest: 'deadbeef',
     hashAlgorithm: 'whatnot',
     time: 12345,
-    metadata: 'omgsometa'
+    metadata: 'omgsometa',
+    size: 5
   }
   const fixture = new Tacks(Dir({
     'index': CacheIndex({
@@ -75,12 +76,14 @@ test('index.find key case-sensitivity', function (t) {
       'jsonstream': {
         key: 'jsonstream',
         digest: 'lowercase',
-        time: 54321
+        time: 54321,
+        size: 5
       },
       'JSONStream': {
         key: 'JSONStream',
         digest: 'capitalised',
-        time: 12345
+        time: 12345,
+        size: 6
       }
     })
   }))
@@ -106,7 +109,8 @@ test('index.find path-breaking characters', function (t) {
     digest: 'deadbeef',
     time: 12345,
     hashAlgorithm: 'whatnot',
-    metadata: 'omgsometa'
+    metadata: 'omgsometa',
+    size: 9
   }
   const idx = {}
   idx[entry.key] = entry
@@ -135,7 +139,8 @@ test('index.find extremely long keys', function (t) {
     digest: 'deadbeef',
     time: 12345,
     hashAlgorithm: 'whatnot',
-    metadata: 'woo'
+    metadata: 'woo',
+    size: 10
   }
   const idx = {}
   idx[entry.key] = entry
@@ -206,7 +211,8 @@ test('index.find hash conflict in same bucket', function (t) {
     digest: 'deadbeef',
     hashAlgorithm: 'whatnot',
     time: 12345,
-    metadata: 'yay'
+    metadata: 'yay',
+    size: 8
   }
   const fixture = new Tacks(Dir({
     'index': CacheIndex({

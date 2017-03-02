@@ -29,7 +29,8 @@ function getData (byDigest, cache, key, opts) {
       metadata: memoized.entry.metadata,
       data: memoized.data,
       digest: memoized.entry.digest,
-      hashAlgorithm: memoized.entry.hashAlgorithm
+      hashAlgorithm: memoized.entry.hashAlgorithm,
+      size: memoized.entry.size
     })
   }
   const src = (byDigest ? getStreamDigest : getStream)(cache, key, opts)
@@ -38,10 +39,10 @@ function getData (byDigest, cache, key, opts) {
   let metadata
   let digest
   let hashAlgorithm
+  let size
   if (!byDigest) {
-    src.on('digest', d => {
-      digest = d
-    })
+    src.on('digest', d => { digest = d })
+    src.on('size', d => { size = d })
     src.on('hashAlgorithm', d => { hashAlgorithm = d })
     src.on('metadata', d => { metadata = d })
   }
@@ -51,7 +52,7 @@ function getData (byDigest, cache, key, opts) {
   })
   return finished(src).then(() => {
     const data = Buffer.concat(acc, dataTotal)
-    return byDigest ? data : { metadata, data, digest, hashAlgorithm }
+    return byDigest ? data : { metadata, data, digest, hashAlgorithm, size }
   })
 }
 
@@ -63,6 +64,7 @@ function getStream (cache, key, opts) {
   if (memoized && opts.memoize !== false) {
     stream.on('newListener', function (ev, cb) {
       ev === 'metadata' && cb(memoized.entry.metadata)
+      ev === 'size' && cb(memoized.entry.size)
       ev === 'digest' && cb(memoized.entry.digest)
       ev === 'hashAlgorithm' && cb(memoized.entry.hashAlgorithm)
     })
@@ -92,12 +94,15 @@ function getStream (cache, key, opts) {
     }
     // TODO - don't overwrite someone else's `opts`.
     opts.hashAlgorithm = entry.hashAlgorithm
+    opts.size = entry.size
     stream.emit('metadata', entry.metadata)
     stream.emit('hashAlgorithm', entry.hashAlgorithm)
     stream.emit('digest', entry.digest)
+    stream.emit('size', entry.size)
     stream.on('newListener', function (ev, cb) {
       ev === 'metadata' && cb(entry.metadata)
       ev === 'digest' && cb(entry.digest)
+      ev === 'size' && cb(entry.size)
       ev === 'hashAlgorithm' && cb(entry.hashAlgorithm)
     })
     pipe(

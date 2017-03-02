@@ -17,6 +17,7 @@ const File = Tacks.File
 
 const CACHE = path.join(testDir, 'cache')
 const CONTENT = bufferise('foobarbaz')
+const SIZE = CONTENT.length
 const KEY = 'my-test-key'
 const ALGO = 'sha512'
 const DIGEST = crypto.createHash(ALGO).update(CONTENT).digest('hex')
@@ -38,6 +39,7 @@ function streamGet (byDigest) {
   let hashAlgorithm
   let digest
   let metadata
+  let size
   const stream = (
     byDigest ? get.stream.byDigest : get.stream
   ).apply(null, args)
@@ -50,9 +52,11 @@ function streamGet (byDigest) {
     digest = d
   }).on('metadata', m => {
     metadata = m
+  }).on('size', s => {
+    size = s
   })
   return finished(stream).then(() => ({
-    data: Buffer.concat(data, dataLen), hashAlgorithm, digest, metadata
+    data: Buffer.concat(data, dataLen), hashAlgorithm, digest, metadata, size
   }))
 }
 
@@ -68,6 +72,7 @@ test('basic bulk get', t => {
   }))
   fixture.create(CACHE)
   return index.insert(CACHE, KEY, DIGEST, {
+    size: SIZE,
     metadata: METADATA,
     hashAlgorithm: ALGO
   }).then(() => {
@@ -77,7 +82,8 @@ test('basic bulk get', t => {
       metadata: METADATA,
       data: CONTENT,
       hashAlgorithm: ALGO,
-      digest: DIGEST
+      digest: DIGEST,
+      size: SIZE
     }, 'bulk key get returned proper data')
   }).then(() => {
     return get.byDigest(CACHE, DIGEST, {hashAlgorithm: ALGO})
@@ -99,7 +105,8 @@ test('basic stream get', t => {
   fixture.create(CACHE)
   return index.insert(CACHE, KEY, DIGEST, {
     metadata: METADATA,
-    hashAlgorithm: ALGO
+    hashAlgorithm: ALGO,
+    size: SIZE
   }).then(() => {
     return Promise.join(
       streamGet(false, CACHE, KEY),
@@ -109,7 +116,8 @@ test('basic stream get', t => {
           data: CONTENT,
           hashAlgorithm: ALGO,
           digest: DIGEST,
-          metadata: METADATA
+          metadata: METADATA,
+          size: SIZE
         }, 'got all expected data and fields from key fetch')
         t.deepEqual(
           byDigest.data,
@@ -159,7 +167,8 @@ test('memoizes data on bulk read', t => {
   fixture.create(CACHE)
   return index.insert(CACHE, KEY, DIGEST, {
     metadata: METADATA,
-    hashAlgorithm: ALGO
+    hashAlgorithm: ALGO,
+    size: SIZE
   }).then(ENTRY => {
     return get(CACHE, KEY).then(() => {
       t.deepEqual(memo.get(CACHE, KEY), null, 'no memoization!')
@@ -169,7 +178,8 @@ test('memoizes data on bulk read', t => {
         metadata: METADATA,
         data: CONTENT,
         hashAlgorithm: ALGO,
-        digest: DIGEST
+        digest: DIGEST,
+        size: SIZE
       }, 'usual data returned')
       t.deepEqual(memo.get(CACHE, KEY), {
         entry: ENTRY,
@@ -183,7 +193,8 @@ test('memoizes data on bulk read', t => {
         metadata: METADATA,
         data: CONTENT,
         hashAlgorithm: ALGO,
-        digest: DIGEST
+        digest: DIGEST,
+        size: SIZE
       }, 'memoized data fetched by default')
       return get(CACHE, KEY, { memoize: false }).then(() => {
         throw new Error('expected get to fail')
@@ -213,7 +224,8 @@ test('memoizes data on stream read', t => {
   fixture.create(CACHE)
   return index.insert(CACHE, KEY, DIGEST, {
     metadata: METADATA,
-    hashAlgorithm: ALGO
+    hashAlgorithm: ALGO,
+    size: SIZE
   }).then(ENTRY => {
     return Promise.join(
       streamGet(false, CACHE, KEY),
@@ -258,7 +270,8 @@ test('memoizes data on stream read', t => {
         metadata: METADATA,
         data: CONTENT,
         hashAlgorithm: ALGO,
-        digest: DIGEST
+        digest: DIGEST,
+        size: SIZE
       }, 'usual data returned from key fetch')
       t.deepEqual(memo.get(CACHE, KEY), {
         entry: ENTRY,
@@ -285,7 +298,8 @@ test('memoizes data on stream read', t => {
             metadata: METADATA,
             data: CONTENT,
             hashAlgorithm: ALGO,
-            digest: DIGEST
+            digest: DIGEST,
+            size: SIZE
           }, 'key fetch fulfilled by memoization cache')
           t.deepEqual(
             byDigest.data,

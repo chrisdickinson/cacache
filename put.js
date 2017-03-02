@@ -25,9 +25,10 @@ module.exports.stream = putStream
 function putStream (cache, key, opts) {
   opts = opts || {}
   let digest
-  const contentStream = putContent(cache, opts).on('digest', function (d) {
-    digest = d
-  })
+  let size
+  const contentStream = putContent(cache, opts)
+  .on('digest', d => { digest = d })
+  .on('size', s => { size = s })
   let memoData
   let memoTotal = 0
   const stream = to((chunk, enc, cb) => {
@@ -41,6 +42,8 @@ function putStream (cache, key, opts) {
     })
   }, cb => {
     contentStream.end(() => {
+      // TODO - stop modifying `opts`
+      opts.size = opts.size || size
       index.insert(cache, key, digest, opts).then(entry => {
         if (opts.memoize) {
           memo.put(cache, entry, Buffer.concat(memoData, memoTotal))

@@ -18,14 +18,16 @@ test('basic listing', function (t) {
       digest: 'deadbeef',
       hashAlgorithm: 'whatnot',
       time: 12345,
-      metadata: 'omgsometa'
+      metadata: 'omgsometa',
+      size: 234234
     },
     'whatnot': {
       key: 'whatnot',
       digest: 'bada55',
       hashAlgorithm: 'whateva',
       time: 54321,
-      metadata: null
+      metadata: null,
+      size: 425345345
     }
   }
   const fixture = new Tacks(Dir({
@@ -50,14 +52,16 @@ test('separate keys in conflicting buckets', function (t) {
       digest: 'deadbeef',
       hashAlgorithm: 'whatnot',
       time: 12345,
-      metadata: 'omgsometa'
+      metadata: 'omgsometa',
+      size: 5
     },
     'whatev': {
       key: 'whatev',
       digest: 'bada55',
       hashAlgorithm: 'whateva',
       time: 54321,
-      metadata: null
+      metadata: null,
+      size: 99234234
     }
   }
   const fixture = new Tacks(Dir({

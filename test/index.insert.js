@@ -19,10 +19,15 @@ const KEY = 'foo'
 const BUCKET = index._bucketPath(CACHE, KEY)
 const DIGEST = 'deadbeef'
 const ALGO = 'whatnot'
+const SIZE = 999
 
 test('basic insertion', function (t) {
   return index.insert(
-    CACHE, KEY, DIGEST, { metadata: 'foo', hashAlgorithm: ALGO }
+    CACHE, KEY, DIGEST, {
+      metadata: 'foo',
+      hashAlgorithm: ALGO,
+      size: SIZE
+    }
   ).then(entry => {
     t.deepEqual(entry, {
       key: KEY,
@@ -30,7 +35,8 @@ test('basic insertion', function (t) {
       hashAlgorithm: ALGO,
       path: contentPath(CACHE, DIGEST, ALGO),
       time: entry.time,
-      metadata: 'foo'
+      metadata: 'foo',
+      size: SIZE
     }, 'formatted entry returned')
     return fs.readFileAsync(BUCKET, 'utf8')
   }).then(data => {
@@ -42,7 +48,8 @@ test('basic insertion', function (t) {
       digest: DIGEST,
       hashAlgorithm: ALGO,
       time: entry.time,
-      metadata: 'foo'
+      metadata: 'foo',
+      size: SIZE
     }, 'entry matches what was inserted')
   })
 })
